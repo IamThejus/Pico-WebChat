@@ -3,14 +3,17 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from typing import Dict
 import json
-
+from pico_ai import *
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+
+
 # Track connected users: username -> WebSocket
 active_connections: Dict[str, WebSocket] = {}
-
+pico_connections: Dict[str,PicoAI]={}
 
 @app.get("/")
 async def get_login():
@@ -41,6 +44,8 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
 
     await websocket.accept()
     active_connections[username] = websocket
+    pico_connections[username]=PicoAI()
+    pico_connections[username].chat("My name is "+str(username))
 
     # Notify everyone of updated user list
     await broadcast_user_list()
@@ -68,16 +73,30 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
 
             elif data.get("type") == "private":
                 receiver = data.get("receiver")
-                if receiver and receiver in active_connections:
+                if receiver=="PICO":
+                    pico_agent=pico_connections[username]
+                    response=pico_agent.chat(data["message"])
                     payload = json.dumps({
-                        "type": "message",
-                        "data": {
-                            "type": "private",
-                            "sender": username,
-                            "message": data.get("message", "")
-                        }
-                    })
-                    await active_connections[receiver].send_text(payload)
+                            "type": "message",
+                            "data": {
+                                "type": "private",
+                                "sender": "PICO",
+                                "message": response
+                            }
+                        })
+                    await active_connections[username].send_text(payload)
+                    
+                else:
+                    if receiver and receiver in active_connections:
+                        payload = json.dumps({
+                            "type": "message",
+                            "data": {
+                                "type": "private",
+                                "sender": username,
+                                "message": data.get("message", "")
+                            }
+                        })
+                        await active_connections[receiver].send_text(payload)
 
     except WebSocketDisconnect:
         pass
@@ -87,9 +106,11 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
 
 
 async def broadcast_user_list():
+    users=list(active_connections.keys())
+    users.append("PICO")
     payload = json.dumps({
         "type": "active-users-list",
-        "data": {"users": list(active_connections.keys())}
+        "data": {"users": users}
     })
     for ws in list(active_connections.values()):
         try:
