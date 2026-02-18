@@ -1,7 +1,9 @@
 let socket;
 const username = window.currentUser;
 console.log("Connecting as:", username);
-socket = new WebSocket(`ws://${window.location.host}/ws/${username}`);
+const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+const socket = new WebSocket(`${protocol}//${window.location.host}/ws/${window.currentUser}`);
+
 
 socket.onmessage = (event) => {
     const result = JSON.parse(event.data);
