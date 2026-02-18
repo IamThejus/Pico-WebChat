@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Chat</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    background: linear-gradient(135deg, #e0e7ff, #f8fafc);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.6);
+    padding: 20px;
+    border-right: 1px solid rgba(0,0,0,0.05);
+}
+
+.sidebar h3 {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.user {
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user:hover {
+    background: rgba(10,132,255,0.1);
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background: #34c759;
+    border-radius: 50%;
+}
+
+/* Main Chat */
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 18px;
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.7);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-weight: 500;
+}
+
+.messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.bubble {
+    max-width: 60%;
+    padding: 12px 18px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.left {
+    background: #f1f1f1;
+}
+
+.right {
+    background: #0A84FF;
+    color: white;
+    margin-left: auto;
+}
+
+.input-area {
+    padding: 15px;
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    gap: 10px;
+}
+
+.input-area input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+    background: rgba(255,255,255,0.9);
+}
+
+.input-area button {
+    padding: 12px 20px;
+    border-radius: 20px;
+    border: none;
+    background: #0A84FF;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.input-area button:hover {
+    transform: scale(1.05);
+}
+
+/* Mini Chat */
+.mini-chat {
+    width: 280px;
+    height: 350px;
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.8);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.mini-header {
+    padding: 12px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    justify-content: space-between;
+}
+
+.mini-messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.mini-input {
+    display: flex;
+    padding: 10px;
+    gap: 5px;
+}
+
+.mini-input input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 15px;
+    border: none;
+    outline: none;
+}
+
+.mini-input button {
+    padding: 8px 12px;
+    border-radius: 15px;
+    border: none;
+    background: #0A84FF;
+    color: white;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h3>Online</h3>
+    <div id="active-users"></div>
+</div>
+
+<div class="chat-container">
+    <div class="chat-header">
+        Logged in as {{ username }}
+    </div>
+
+    <div id="messages" class="messages"></div>
+
+    <div class="input-area">
+        <input type="text" id="messageInput" placeholder="Type message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<div id="mini-chats-container" style="position:fixed; bottom:20px; right:20px; display:flex; gap:15px;"></div>
+
+<script>
+window.currentUser = "{{ username }}";
+let socket = new WebSocket(`ws://${window.location.host}/ws/${window.currentUser}`);
+
+socket.onmessage = (event) => {
+    const result = JSON.parse(event.data);
+
+    if (result.type === "error") {
+        alert(result.data.log);
+        window.location.href = "/";
+        return;
+    }
+
+    if (result.type === "active-users-list") {
+        renderUsers(result.data.users);
+    }
+
+    if (result.type === "message") {
+        if (result.data.type === "public") {
+            addMessage(result.data.sender, result.data.message);
+        } else {
+            openMiniChat(result.data.sender, result.data.message);
+        }
+    }
+};
+
+function addMessage(sender, message) {
+    const box = document.getElementById("messages");
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "bubble " + 
+        (sender === window.currentUser ? "right" : "left");
+
+    // Add sender label (only for others)
+    if (sender !== window.currentUser) {
+        const name = document.createElement("div");
+        name.style.fontSize = "12px";
+        name.style.fontWeight = "600";
+        name.style.marginBottom = "4px";
+        name.style.opacity = "0.7";
+        name.innerText = sender;
+        wrapper.appendChild(name);
+    }
+
+    const text = document.createElement("div");
+    text.innerText = message;
+    wrapper.appendChild(text);
+
+    box.appendChild(wrapper);
+    box.scrollTop = box.scrollHeight;
+}
+
+function sendMessage() {
+    const input = document.getElementById("messageInput");
+    if (!input.value.trim()) return;
+
+    socket.send(JSON.stringify({
+        type: "public",
+        message: input.value
+    }));
+
+    input.value = "";
+}
+
+function renderUsers(users) {
+    const container = document.getElementById("active-users");
+    container.innerHTML = "";
+
+    users.forEach(user => {
+        if (user === window.currentUser) return;
+        const div = document.createElement("div");
+        div.className = "user";
+        div.innerHTML = `<div class="dot"></div>${user}`;
+        div.onclick = () => openMiniChat(user);
+        container.appendChild(div);
+    });
+}
+
+function openMiniChat(user, incoming=null) {
+    let chat = document.getElementById("mini-" + user);
+    if (!chat) {
+        chat = document.createElement("div");
+        chat.className = "mini-chat";
+        chat.id = "mini-" + user;
+
+        chat.innerHTML = `
+            <div class="mini-header">
+                ${user}
+                <span style="cursor:pointer;" onclick="this.parentElement.parentElement.remove()">×</span>
+            </div>
+            <div class="mini-messages"></div>
+            <div class="mini-input">
+                <input placeholder="Message"/>
+                <button>Send</button>
+            </div>
+        `;
+
+        const btn = chat.querySelector("button");
+        const input = chat.querySelector("input");
+        const messages = chat.querySelector(".mini-messages");
+
+        btn.onclick = () => {
+            if (!input.value.trim()) return;
+
+            socket.send(JSON.stringify({
+                type: "private",
+                receiver: user,
+                message: input.value
+            }));
+
+            const msg = document.createElement("div");
+            msg.className = "bubble right";
+            msg.innerText = input.value;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+            input.value = "";
+        };
+
+        document.getElementById("mini-chats-container").appendChild(chat);
+    }
+
+    if (incoming) {
+        const messages = chat.querySelector(".mini-messages");
+        const msg = document.createElement("div");
+        msg.className = "bubble left";
+        msg.innerText = incoming;
+        messages.appendChild(msg);
+        messages.scrollTop = messages.scrollHeight;
+    }
+}
+</script>
+
+</body>
+</html>
