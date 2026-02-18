@@ -205,7 +205,7 @@ body {
 
 <script>
 window.currentUser = "{{ username }}";
-let socket = new WebSocket(`ws://${window.location.host}/ws/${window.currentUser}`);
+let socket = new WebSocket(`ws://pico-webchat.onrender.com/ws/${window.currentUser}`);
 
 socket.onmessage = (event) => {
     const result = JSON.parse(event.data);
