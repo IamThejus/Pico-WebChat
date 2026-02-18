@@ -14,12 +14,12 @@ active_connections: Dict[str, WebSocket] = {}
 
 @app.get("/")
 async def get_login():
-    return FileResponse("static/login.html")
+    return FileResponse("templates/login.html")
 
 
 @app.get("/chat/{username}")
 async def get_chat(username: str):
-    return FileResponse("static/chat.html")
+    return FileResponse("templates/chat.html")
 
 
 @app.get("/active-users-count")
