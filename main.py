@@ -4,9 +4,12 @@ from fastapi.responses import HTMLResponse, FileResponse
 from typing import Dict
 import json
 from pico_ai import *
+from pico_memory import  PICO_SYSTEM_PROMPT
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 
 
 
@@ -46,6 +49,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
     active_connections[username] = websocket
     pico_connections[username]=PicoAI()
     pico_connections[username].chat("My name is "+str(username))
+    pico_connections[username].chat(PICO_SYSTEM_PROMPT)
 
     # Notify everyone of updated user list
     await broadcast_user_list()
