@@ -285,7 +285,9 @@ function appendMiniMessage(messagesDiv, text, side) {
 
 async function loadPublicHistory() {
     try {
-        const res = await fetch("/api/history/public");
+        const res = await fetch("/api/history/public", {
+    credentials: "include"
+});
         const messages = await res.json();
         messages.forEach(({ username: sender, message }) => {
             addPublicMessage(sender, message);
@@ -305,7 +307,9 @@ async function loadPrivateHistory(otherUser) {
             url = `/api/history/private/${encodeURIComponent(otherUser)}`;
         }
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+    credentials: "include"
+});
         const data = await res.json();
 
         const chatId = `mini-chat-${CSS.escape(otherUser)}`;
