@@ -24,6 +24,8 @@ async def public_history():
 async def private_history(request: Request, other_user: str):
     username = getattr(request.state, "username", None)
     data = await get_private_chats(username, other_user)
+    print("Username from state:", username)
+    print("Cookies:", request.cookies)
     return JSONResponse(data or [])
 
 @router.get("/api/history/pico")
