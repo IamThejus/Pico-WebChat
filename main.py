@@ -8,6 +8,7 @@ from supermiddleware import supermiddleware
 import os
 print("SUPABASE URL:", os.getenv("SUPABASE_URL"))
 print("SUPABASE KEY:", os.getenv("SUPABASE_KEY")[:20])
+
 app = FastAPI()
 app.add_middleware(BaseHTTPMiddleware,supermiddleware)
 app.mount("/static", StaticFiles(directory="static"), name="static")

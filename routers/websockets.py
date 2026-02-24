@@ -27,9 +27,14 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
 
     await websocket.accept()
     active_connections[username] = websocket
-    pico_connections[username]=PicoAI()
-    pico_connections[username].chat("My name is "+str(username))
-    pico_connections[username].chat(PICO_SYSTEM_PROMPT)
+    pico_msg=await get_pico(username)
+    if pico_msg:
+        pico_connections[username]=PicoAI()
+        pico_connections[username].chat_history=pico_msg["chat_history"]
+    else:
+        pico_connections[username]=PicoAI()
+        pico_connections[username].chat("My name is "+str(username))
+        pico_connections[username].chat(PICO_SYSTEM_PROMPT)
     asyncio.create_task(add_pico(username=username))
 
     # Notify everyone of updated user list

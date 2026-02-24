@@ -36,7 +36,6 @@ async def pico_history(request: Request):
 
 @router.get("/")
 async def get_login():
-    print("Yes")
     return FileResponse("templates/login.html")
     
 @router.get("/chat/{username}")
