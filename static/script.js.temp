@@ -297,51 +297,26 @@ async function loadPublicHistory() {
 
 async function loadPrivateHistory(otherUser) {
     try {
-        let url;
-
-        if (otherUser === "PICO") {
-            url = "/api/history/pico";
-        } else {
-            url = `/api/history/private/${encodeURIComponent(otherUser)}`;
-        }
-
-        const res = await fetch(url);
-        const data = await res.json();
+        const res = await fetch(`/api/history/private/${encodeURIComponent(otherUser)}`);
+        const messages = await res.json();
 
         const chatId = `mini-chat-${CSS.escape(otherUser)}`;
         let chatBox = document.getElementById(chatId);
 
+        // open the mini chat window first if not already open
         if (!chatBox) openMiniChat(otherUser);
         chatBox = document.getElementById(chatId);
 
         const messagesDiv = chatBox.querySelector(".mini-messages");
-        messagesDiv.innerHTML = ""; // clear old messages
-
-        if (otherUser === "PICO") {
-            const history = data.chat_history || [];
-
-            history.forEach(msg => {
-                // Skip personality/system prompts
-                if (
-                    msg.content.length > 300 ||      // long prompt
-                    msg.content.includes("You are Pico") // system text
-                ) return;
-
-                const side = msg.role === "user" ? "right" : "left";
-                appendMiniMessage(messagesDiv, msg.content, side);
-            });
-
-        } else {
-            data.forEach(({ sender, message }) => {
-                const side = sender === username ? "right" : "left";
-                appendMiniMessage(messagesDiv, message, side);
-            });
-        }
-
+        messages.forEach(({ sender, message }) => {
+            const side = sender === username ? "right" : "left";
+            appendMiniMessage(messagesDiv, message, side);
+        });
     } catch (e) {
-        console.error("Failed to load history:", e);
+        console.error("Failed to load private history:", e);
     }
 }
+
 async function loadPicoHistory() {
 
     try {

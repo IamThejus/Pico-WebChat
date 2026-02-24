@@ -1,41 +1,61 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from socket_connections import manager
-from models import *
-from fastapi.staticfiles import StaticFiles
+from fastapi import APIRouter
 from fastapi.responses import FileResponse
-
-router = APIRouter()
-templates = Jinja2Templates(directory="templates")
-
-router.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-@router.get("/favicon.ico")
-async def favicon():
-    return FileResponse("static/favicon.ico")
-
-# Login page
-@router.get("/", response_class=HTMLResponse)
-async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+from tools.socket_pico_connections import active_connections
+from tools.superdb import *
+from fastapi.requests import Request
+from fastapi.responses import JSONResponse
+from fastapi.responses  import Response
+import requests
 
 
-# Chat page
-@router.get("/chat/{username}", response_class=HTMLResponse)
-async def chat_page(request: Request, username: str):
-    return templates.TemplateResponse(
-        "chat.html",
-        {"request": request, "username": username}
-    )
+router=APIRouter()
+
+
+
+# routers/api.py
+
+
+@router.get("/api/history/public")
+async def public_history():
+    data = await get_public_chats()
+    return JSONResponse(data or [])
+
+@router.get("/api/history/private/{other_user}")
+async def private_history(request: Request, other_user: str):
+    username = getattr(request.state, "username", None)
+    data = await get_private_chats(username, other_user)
+    return JSONResponse(data or [])
+
+@router.get("/api/history/pico")
+async def pico_history(request: Request):
+    username = getattr(request.state, "username", None)
+    data = await get_pico(username)
+    print(data)
+    return JSONResponse(data or {"chat_history": []})
+
+
+@router.get("/")
+async def get_login():
+    print("Yes")
+    return FileResponse("templates/login.html")
+    
+@router.get("/chat/{username}")
+async def get_chat(request:Request,response: Response,username:str):
+    file_response=FileResponse("templates/chat.html")
+    file_response.set_cookie(key="token",value=username)
+    return file_response
+
+@router.post('/setcookies')
+async def setcookie(response:Response,request:Request,username:str):
+    response.set_cookie(key="token",value=username)
+    return f"Cookies set :{username}"
+
+@router.get("/deletecookie")
+async def get_chat(response:Response):
+    response.delete_cookie("token")
+    return "Cookie deleted successfully"
+
 
 @router.get("/active-users-count")
-async def get_active_users():
-    count={
-    "count": len(list(manager.active_connections.keys()))
-    }
-    print(count)
-    datapipe=DataPipe(type="active-users-count",data=count)
-    return datapipe.model_dump()
-
+async def active_users_count():
+    return {"data": {"count": len(active_connections)}}
