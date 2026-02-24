@@ -43,7 +43,12 @@ async def get_login():
 @router.get("/chat/{username}")
 async def get_chat(request:Request,response: Response,username:str):
     file_response=FileResponse("templates/chat.html")
-    file_response.set_cookie(key="token",value=username)
+    file_response.set_cookie(key="token",
+    value=username,
+    httponly=True,
+    secure=True,       # required for HTTPS
+    samesite="none"
+)
     return file_response
 
 @router.post('/setcookies')
