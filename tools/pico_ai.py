@@ -1,6 +1,6 @@
 from groq import Groq
-
-api_key="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"
+import os
+api_key = os.environ.get("api_key")
 
 
 
