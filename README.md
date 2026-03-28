@@ -135,15 +135,18 @@ Pico is a built-in AI assistant unique to each user. It remembers your conversat
 
 ## 📸 Screenshots
 
-<img width="1920" height="1080" alt="public chat" src="https://github.com/user-attachments/assets/f2468f40-0aac-4108-96f9-92292e0c70f3" />
-<img width="1920" height="1080" alt="private chat" src="https://github.com/user-attachments/assets/a3a329fb-b35b-478f-a933-0a7235c6f7ed" />
-<img width="1920" height="1080" alt="pico ai" src="https://github.com/user-attachments/assets/6c1bca27-3873-4f83-9ad3-529d1f9c32fa" />
-<img width="1920" height="1080" alt="Main chat" src="https://github.com/user-attachments/assets/4220eb2d-a156-4853-b5d7-fdf3011739ef" />
-<img width="1920" height="1080" alt="Entry Page" src="https://github.com/user-attachments/assets/4e946d20-f9e8-4fb0-8d4d-4e18e1f7698f" />
+<img width="100%" alt="Entry Page" src="https://github.com/user-attachments/assets/4e946d20-f9e8-4fb0-8d4d-4e18e1f7698f" />
 
-
-
-
+<table>
+  <tr>
+    <td><img alt="Public Chat" src="https://github.com/user-attachments/assets/f2468f40-0aac-4108-96f9-92292e0c70f3" /></td>
+    <td><img alt="Main Chat" src="https://github.com/user-attachments/assets/4220eb2d-a156-4853-b5d7-fdf3011739ef" /></td>
+  </tr>
+  <tr>
+    <td><img alt="Private Chat" src="https://github.com/user-attachments/assets/a3a329fb-b35b-478f-a933-0a7235c6f7ed" /></td>
+    <td><img alt="Pico AI" src="https://github.com/user-attachments/assets/6c1bca27-3873-4f83-9ad3-529d1f9c32fa" /></td>
+  </tr>
+</table>
 
 ---
 
